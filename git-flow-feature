@@ -53,6 +53,7 @@ usage() {
 	echo "       git flow feature rebase [-i] [<name|nameprefix>]"
 	echo "       git flow feature checkout [<name|nameprefix>]"
 	echo "       git flow feature pull [-r] <remote> [<name>]"
+	echo "       git flow feature merge"
 }
 
 cmd_default() {
@@ -420,6 +421,22 @@ cmd_track() {
 	echo "Summary of actions:"
 	echo "- A new remote tracking branch '$BRANCH' was created"
 	echo "- You are now on branch '$BRANCH'"
+	echo
+}
+
+cmd_merge() {
+	parse_args "$@"
+
+	# sanity checks
+	require_clean_working_tree
+	git_do fetch -q "$ORIGIN"
+	require_branch "$DEVELOP_BRANCH"
+
+	git_do merge --no-ff "$DEVELOP_BRANCH"
+
+	echo
+	echo "Summary of actions:"
+	echo "- Merged $DEVELOP_BRANCH with $BRANCH"
 	echo
 }
 
