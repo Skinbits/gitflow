@@ -320,7 +320,7 @@ cmd_finish() {
 		    git_do merge --no-ff "$BRANCH"
 		else
 			git_do merge --squash "$BRANCH"
-			git_do commit
+			git_do commit -m "Finishing feature $BRANCH."
 			git_do merge "$BRANCH"
 		fi
 	fi
