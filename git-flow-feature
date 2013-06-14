@@ -462,6 +462,7 @@ cmd_checkout() {
 
 	if [ "$NAME" != "" ]; then
 		expand_nameprefix_arg
+        git_do fetch -q "$ORIGIN"
 		git_do checkout "$BRANCH"
 	else
 		die "Name a feature branch explicitly."
