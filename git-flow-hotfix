@@ -36,7 +36,8 @@
 # policies, either expressed or implied, of Vincent Driessen.
 #
 
-init() {
+init() {	
+	set -u 
   require_git_repo
   require_gitflow_initialized
   gitflow_load_settings
@@ -239,6 +240,19 @@ cmd_track() {
 	echo
 }
 
+get_release_branch() {
+		RELEASE_NAME=$(git config --get gitflow.prefix.release)
+		if [ "x" != "x$RELEASE_NAME" ]; then 
+				# no release branch configured
+				return
+		fi
+		RELEASE_BRANCH=$(git branch -r | grep release/ | sort | tail -n 1)
+		if [ "x" != "x$RELEASE_BRANCH" ]; then 
+				return
+		fi
+		export RELEASE_BRANCH
+}
+
 cmd_finish() {
 	DEFINE_boolean fetch false "fetch from $ORIGIN before performing finish" F
 	DEFINE_boolean sign false "sign the release tag cryptographically" s
@@ -256,6 +270,8 @@ cmd_finish() {
 		FLAGS_sign=$FLAGS_TRUE
 	fi
 
+	get_release_branch
+
 	# sanity checks
 	require_branch "$BRANCH"
 	require_clean_working_tree
@@ -270,6 +286,9 @@ cmd_finish() {
 	fi
 	if has "$ORIGIN/$DEVELOP_BRANCH" $(git_remote_branches); then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
+	fi
+	if has "$ORIGIN/$RELEASE_BRANCH" $(git_remote_branches); then
+		require_branches_equal "$RELEASE_BRANCH" "$ORIGIN/$RELEASE_BRANCH"
 	fi
 
 	# try to merge into master
@@ -313,6 +332,13 @@ cmd_finish() {
 		  # TODO: What do we do now?
 	fi
 
+	# try to merge into release branch
+	if [ "x" != "x$RELEASE_BRANCH" ]; then 
+			if ! git_is_branch_merged_into "$BRANCH" "$RELEASE_BRANCH"; then
+					git_do checkout "$RELEASE_BRANCH" || die "Could not check out $RELEASE_BRANCH"
+					git_do merge --no-ff "$BRANCH" || die "There were merge conflicts."
+			fi
+  fi
 	# delete branch
 	if noflag keep; then
 		git_do branch -d "$BRANCH"
