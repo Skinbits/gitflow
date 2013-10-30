@@ -242,15 +242,18 @@ cmd_track() {
 
 get_release_branch() {
 		RELEASE_NAME=$(git config --get gitflow.prefix.release)
-		if [ "x" != "x$RELEASE_NAME" ]; then 
+		if [ "x" == "x$RELEASE_NAME" ]; then 
 				# no release branch configured
 				return
 		fi
-		RELEASE_BRANCH=$(git branch -r | grep release/ | sort | tail -n 1)
-		if [ "x" != "x$RELEASE_BRANCH" ]; then 
-				return
+		RELEASE_BRANCH=$(git branch -r --no-color | grep $RELEASE_NAME | sort | tail -n 1 | xargs )
+		if [ "x" == "x$RELEASE_BRANCH" ]; then 
+				RELEASE_BRANCH=$(git branch --no-color | grep $RELEASE_NAME | sort | tail -n 1 | xargs )
+				if [ "x" == "x$RELEASE_BRANCH" ]; then
+						return
+				fi
 		fi
-		export RELEASE_BRANCH
+		export RELEASE_BRANCH=$RELEASE_BRANCH
 }
 
 cmd_finish() {
@@ -359,6 +362,9 @@ cmd_finish() {
 	echo "Summary of actions:"
 	echo "- Latest objects have been fetched from '$ORIGIN'"
 	echo "- Hotfix branch has been merged into '$MASTER_BRANCH'"
+  if [ "x" != "x$RELEASE_BRANCH" ]; then
+			echo "- Hotfix branch has been merged into '$RELEASE_BRANCH'"
+	fi
 	if noflag notag; then
 		echo "- The hotfix was tagged '$VERSION_PREFIX$VERSION'"
 	fi
