@@ -129,6 +129,10 @@ parse_args() {
 	eval set -- "${FLAGS_ARGV}"
 
 	# read arguments into global variables
+	if [ $# -ne 1 ]; then
+		 cmd_help()
+		 exit
+	fi
 	VERSION=$1
 	BRANCH=$PREFIX$VERSION
 }
@@ -355,6 +359,9 @@ cmd_finish() {
 		if noflag notag; then
 			git_do push --tags "$ORIGIN" || \
 				die "Could not push tags to $ORIGIN."
+		fi
+		if [ "x" != "x$RELEAE_BRANCH" ]; then
+				git_do push "$ORIGIN" "$RELEASE_BRANCH" || die "Could not push to $RELEASE_BRANCH from $ORIGIN"
 		fi
 	fi
 
